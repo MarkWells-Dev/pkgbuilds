@@ -1,0 +1,26 @@
+# Build artifacts
+*.pkg.tar.zst
+*.pkg.tar.zst.sig
+*.pkg.tar.xz
+*.pkg.tar.xz.sig
+src/
+pkg/
+
+# Repo database
+*.db
+*.db.tar.gz
+*.db.tar.gz.sig
+*.files
+*.files.tar.gz
+*.files.tar.gz.sig
+
+# Editor files
+*.swp
+*~
+.vscode/
+
+# npm cache (from builds)
+npm-cache/
+
+# AppImage extraction artifacts
+squashfs-root/

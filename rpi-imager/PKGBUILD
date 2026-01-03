@@ -1,0 +1,49 @@
+# Maintainer: Mark Wells <m-wells>
+pkgname=rpi-imager
+pkgver=2.0.3
+# renovate: datasource=github-releases depName=raspberrypi/rpi-imager
+pkgrel=1
+pkgdesc="Raspberry Pi Imaging Utility (AppImage)"
+arch=('x86_64')
+url="https://github.com/raspberrypi/rpi-imager"
+license=('Apache-2.0')
+depends=('fuse2' 'zlib' 'hicolor-icon-theme')
+provides=('rpi-imager')
+conflicts=('rpi-imager')
+options=('!strip' '!debug')
+source=("Raspberry_Pi_Imager-v${pkgver}-desktop-x86_64.AppImage::https://github.com/raspberrypi/rpi-imager/releases/download/v${pkgver}/Raspberry_Pi_Imager-v${pkgver}-desktop-x86_64.AppImage")
+sha256sums=('df1f22628d4a9e0c5cf404dc48cbd31fd38a1b676d70505e23a7c866b24935ab')
+noextract=("Raspberry_Pi_Imager-v${pkgver}-desktop-x86_64.AppImage")
+
+package() {
+  # Install AppImage
+  install -Dm755 "${srcdir}/Raspberry_Pi_Imager-v${pkgver}-desktop-x86_64.AppImage" \
+    "${pkgdir}/opt/${pkgname}/${pkgname}.AppImage"
+
+  # Create launcher script
+  install -dm755 "${pkgdir}/usr/bin"
+  cat > "${pkgdir}/usr/bin/${pkgname}" << 'EOF'
+#!/bin/sh
+exec /opt/rpi-imager/rpi-imager.AppImage "$@"
+EOF
+  chmod 755 "${pkgdir}/usr/bin/${pkgname}"
+
+  # Extract and install icon and desktop file from AppImage
+  cd "${srcdir}"
+  chmod +x "Raspberry_Pi_Imager-v${pkgver}-desktop-x86_64.AppImage"
+  "./Raspberry_Pi_Imager-v${pkgver}-desktop-x86_64.AppImage" --appimage-extract rpi-imager.desktop 2>/dev/null || true
+  "./Raspberry_Pi_Imager-v${pkgver}-desktop-x86_64.AppImage" --appimage-extract rpi-imager.png 2>/dev/null || true
+
+  if [ -f squashfs-root/rpi-imager.desktop ]; then
+    install -Dm644 squashfs-root/rpi-imager.desktop \
+      "${pkgdir}/usr/share/applications/${pkgname}.desktop"
+    # Fix Exec path in desktop file
+    sed -i "s|Exec=.*|Exec=/usr/bin/${pkgname}|g" \
+      "${pkgdir}/usr/share/applications/${pkgname}.desktop"
+  fi
+
+  if [ -f squashfs-root/rpi-imager.png ]; then
+    install -Dm644 squashfs-root/rpi-imager.png \
+      "${pkgdir}/usr/share/icons/hicolor/256x256/apps/${pkgname}.png"
+  fi
+}
