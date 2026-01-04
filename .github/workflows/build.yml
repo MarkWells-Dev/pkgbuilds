@@ -27,9 +27,7 @@ jobs:
           chown -R builder:builder .
 
       - name: Import GPG key
-        run: |
-          echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --import
-          echo "${{ secrets.GPG_KEY_ID }}:6:" | gpg --import-ownertrust
+        run: echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
 
       - name: Build packages
         run: |
@@ -48,13 +46,13 @@ jobs:
           for pkg in */*.pkg.tar.zst; do
             if [ -f "$pkg" ]; then
               cp "$pkg" repo/
-              gpg --detach-sign --no-armor "repo/$(basename $pkg)"
+              gpg --batch --yes --detach-sign --no-armor "repo/$(basename $pkg)"
             fi
           done
 
           # Create and sign repo database
           cd repo
-          repo-add --sign m-wells.db.tar.gz *.pkg.tar.zst
+          repo-add --sign --key ${{ secrets.GPG_KEY_ID }} m-wells.db.tar.gz *.pkg.tar.zst
 
       - name: Upload to release
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
