@@ -1,4 +1,5 @@
 # Maintainer: Mark Wells <m-wells>
+# Packaged from npm
 pkgname=gemini-cli
 pkgver=0.22.5
 # renovate: datasource=npm depName=@google/gemini-cli
