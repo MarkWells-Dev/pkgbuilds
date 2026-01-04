@@ -150,6 +150,14 @@ jobs:
 
           echo "Found release ID: $RELEASE_ID"
 
+          # Debug: show existing assets
+          echo "Existing assets in release:"
+          echo "$RELEASE_DATA" | jq -r '.assets[].name'
+
+          echo ""
+          echo "Files to upload:"
+          ls repo/
+
           # Delete assets that will be replaced
           for file in repo/*; do
             filename=$(basename "$file")
