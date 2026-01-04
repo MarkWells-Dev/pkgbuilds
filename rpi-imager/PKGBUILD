@@ -2,7 +2,7 @@
 pkgname=rpi-imager
 pkgver=2.0.3
 # renovate: datasource=github-releases depName=raspberrypi/rpi-imager
-pkgrel=3
+pkgrel=4
 pkgdesc="Raspberry Pi Imaging Utility (AppImage)"
 arch=('x86_64')
 url="https://github.com/raspberrypi/rpi-imager"
@@ -26,27 +26,27 @@ package() {
   install -dm755 "${pkgdir}/usr/bin"
   cat > "${pkgdir}/usr/bin/${pkgname}" << 'EOF'
 #!/bin/sh
-exec pkexec /opt/rpi-imager/rpi-imager.AppImage "$@"
+exec pkexec --disable-internal-agent /opt/rpi-imager/rpi-imager.AppImage "$@"
 EOF
   chmod 755 "${pkgdir}/usr/bin/${pkgname}"
 
   # Extract and install icon and desktop file from AppImage
   cd "${srcdir}"
   chmod +x "Raspberry_Pi_Imager-v${pkgver}-desktop-x86_64.AppImage"
-  "./Raspberry_Pi_Imager-v${pkgver}-desktop-x86_64.AppImage" --appimage-extract rpi-imager.desktop 2>/dev/null || true
-  "./Raspberry_Pi_Imager-v${pkgver}-desktop-x86_64.AppImage" --appimage-extract rpi-imager.png 2>/dev/null || true
+  "./Raspberry_Pi_Imager-v${pkgver}-desktop-x86_64.AppImage" --appimage-extract com.raspberrypi.rpi-imager.desktop 2>/dev/null || true
+  "./Raspberry_Pi_Imager-v${pkgver}-desktop-x86_64.AppImage" --appimage-extract rpi-imager.svg 2>/dev/null || true
 
-  if [ -f squashfs-root/rpi-imager.desktop ]; then
-    install -Dm644 squashfs-root/rpi-imager.desktop \
+  if [ -f squashfs-root/com.raspberrypi.rpi-imager.desktop ]; then
+    install -Dm644 squashfs-root/com.raspberrypi.rpi-imager.desktop \
       "${pkgdir}/usr/share/applications/${pkgname}.desktop"
     # Fix Exec path in desktop file
     sed -i "s|Exec=.*|Exec=/usr/bin/${pkgname}|g" \
       "${pkgdir}/usr/share/applications/${pkgname}.desktop"
   fi
 
-  if [ -f squashfs-root/rpi-imager.png ]; then
-    install -Dm644 squashfs-root/rpi-imager.png \
-      "${pkgdir}/usr/share/icons/hicolor/256x256/apps/${pkgname}.png"
+  if [ -f squashfs-root/rpi-imager.svg ]; then
+    install -Dm644 squashfs-root/rpi-imager.svg \
+      "${pkgdir}/usr/share/icons/hicolor/scalable/apps/${pkgname}.svg"
   fi
 
   # Install polkit policy for privilege elevation (with fixed path for AppImage)
