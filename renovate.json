@@ -1,13 +1,17 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:base"],
+  "extends": [
+    "config:recommended"
+  ],
   "automerge": true,
   "automergeType": "pr",
   "platformAutomerge": true,
   "customManagers": [
     {
       "customType": "regex",
-      "fileMatch": ["(^|/)PKGBUILD$"],
+      "managerFilePatterns": [
+        "/(^|/)PKGBUILD$/"
+      ],
       "matchStrings": [
         "pkgver=(?<currentValue>.*?)\\n# renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)\\n"
       ],
@@ -16,8 +20,12 @@
   ],
   "packageRules": [
     {
-      "matchManagers": ["custom.regex"],
-      "matchDatasources": ["github-releases"],
+      "matchManagers": [
+        "custom.regex"
+      ],
+      "matchDatasources": [
+        "github-releases"
+      ],
       "extractVersion": "^v?(?<version>.*)$"
     }
   ]
