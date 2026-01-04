@@ -64,8 +64,8 @@ jobs:
             CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
           else
             echo "Debug: pwd=$(pwd), GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
-            ls -la .git 2>&1 || echo ".git not found in pwd"
-            cd "$GITHUB_WORKSPACE"
+            ls -la
+            ls -la .git 2>&1 || echo ".git not found"
             echo "Git log:"
             git log --oneline -3 2>&1 || echo "git log failed"
             echo ""
