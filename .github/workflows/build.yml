@@ -32,9 +32,78 @@ jobs:
       - name: Import GPG key
         run: echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
 
-      - name: Build packages
+      - name: Detect and validate packages
+        id: changes
         run: |
-          for pkg in gemini-cli rpi-imager; do
+          # Auto-detect all packages (directories containing PKGBUILD)
+          ALL_PACKAGES=$(find . -maxdepth 2 -name PKGBUILD -printf '%h\n' | sed 's|^\./||' | sort)
+          echo "All packages: $ALL_PACKAGES"
+          echo "all=$ALL_PACKAGES" >> $GITHUB_OUTPUT
+
+          # Validate: directory name must match pkgname
+          ERRORS=0
+          for pkg in $ALL_PACKAGES; do
+            pkgname=$(grep '^pkgname=' "$pkg/PKGBUILD" | cut -d'=' -f2)
+            if [ "$pkg" != "$pkgname" ]; then
+              echo "ERROR: Directory '$pkg' does not match pkgname '$pkgname'"
+              ERRORS=$((ERRORS + 1))
+            fi
+          done
+          if [ $ERRORS -gt 0 ]; then
+            echo "Validation failed: directory names must match pkgname in PKGBUILD"
+            exit 1
+          fi
+
+          # Get list of changed files
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
+          else
+            CHANGED=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || echo "")
+          fi
+
+          # Determine which packages changed
+          PACKAGES=""
+          for pkg in $ALL_PACKAGES; do
+            if echo "$CHANGED" | grep -q "^${pkg}/" || [ -z "$CHANGED" ]; then
+              PACKAGES="$PACKAGES $pkg"
+            fi
+          done
+
+          # If workflow file changed, rebuild all
+          if echo "$CHANGED" | grep -q "^\.github/"; then
+            PACKAGES="$ALL_PACKAGES"
+          fi
+
+          echo "packages=$PACKAGES" >> $GITHUB_OUTPUT
+          echo "Changed packages:$PACKAGES"
+
+      - name: Download existing packages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          mkdir -p existing
+
+          # Get list of assets from latest release
+          ASSETS=$(curl -sL "https://api.github.com/repos/${{ github.repository }}/releases/tags/latest" | \
+            grep '"name":' | grep '\.pkg\.tar\.zst' | sed 's/.*"name": "\(.*\)".*/\1/')
+
+          RELEASE_URL="https://github.com/${{ github.repository }}/releases/download/latest"
+
+          for pkg in ${{ steps.changes.outputs.all }}; do
+            if ! echo "${{ steps.changes.outputs.packages }}" | grep -q "$pkg"; then
+              echo "Downloading existing $pkg packages..."
+              for asset in $ASSETS; do
+                if echo "$asset" | grep -q "^${pkg}"; then
+                  echo "  -> $asset"
+                  curl -sL -f "${RELEASE_URL}/${asset}" -o "existing/${asset}" || true
+                fi
+              done
+            fi
+          done
+          ls -la existing/ 2>/dev/null || echo "No existing packages to download"
+
+      - name: Build changed packages
+        run: |
+          for pkg in ${{ steps.changes.outputs.packages }}; do
             if [ -d "$pkg" ]; then
               echo "==> Building $pkg"
               su builder -c "cd $pkg && makepkg -s --noconfirm"
@@ -45,7 +114,13 @@ jobs:
         run: |
           mkdir -p repo
 
-          # Copy and sign packages
+          # Copy existing unchanged packages (already signed)
+          if [ -d existing ] && [ "$(ls -A existing 2>/dev/null)" ]; then
+            cp existing/*.pkg.tar.zst repo/ 2>/dev/null || true
+            cp existing/*.pkg.tar.zst.sig repo/ 2>/dev/null || true
+          fi
+
+          # Copy and sign newly built packages
           for pkg in */*.pkg.tar.zst; do
             if [ -f "$pkg" ]; then
               cp "$pkg" repo/
@@ -57,22 +132,34 @@ jobs:
           cd repo
           repo-add --sign --key ${{ secrets.GPG_KEY_ID }} m-wells.db.tar.gz *.pkg.tar.zst
 
-      - name: Delete existing release
+      - name: Delete outdated assets
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
-          # Get release ID and delete if exists
-          RELEASE_ID=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/${{ github.repository }}/releases/tags/latest" | \
-            grep '"id":' | head -1 | grep -o '[0-9]*' || echo "")
-          if [ -n "$RELEASE_ID" ]; then
-            echo "Deleting release $RELEASE_ID"
-            curl -s -X DELETE -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              "https://api.github.com/repos/${{ github.repository }}/releases/$RELEASE_ID"
-            curl -s -X DELETE -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              "https://api.github.com/repos/${{ github.repository }}/git/refs/tags/latest" || true
-          else
+          # Get release info
+          RELEASE_DATA=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/releases/tags/latest")
+
+          RELEASE_ID=$(echo "$RELEASE_DATA" | grep '"id":' | head -1 | grep -o '[0-9]*' || echo "")
+
+          if [ -z "$RELEASE_ID" ]; then
             echo "No existing release found"
+            exit 0
           fi
+
+          echo "Found release ID: $RELEASE_ID"
+
+          # Get list of files we're about to upload
+          NEW_FILES=$(ls repo/)
+
+          # Delete assets that will be replaced
+          for file in $NEW_FILES; do
+            ASSET_ID=$(echo "$RELEASE_DATA" | grep -B1 "\"name\": \"$file\"" | grep '"id":' | grep -o '[0-9]*' || echo "")
+            if [ -n "$ASSET_ID" ]; then
+              echo "Deleting old asset: $file (ID: $ASSET_ID)"
+              curl -s -X DELETE -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                "https://api.github.com/repos/${{ github.repository }}/releases/assets/$ASSET_ID"
+            fi
+          done
 
       - name: Upload to release
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
