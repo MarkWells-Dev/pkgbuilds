@@ -74,11 +74,12 @@ jobs:
       - name: Download database and detect deletions
         id: database
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mkdir -p repo
-          RELEASE_URL="https://github.com/${{ github.repository }}/releases/download/latest"
-          curl -sL -f "${RELEASE_URL}/m-wells.db.tar.gz" -o repo/m-wells.db.tar.gz || echo "No existing database"
-          curl -sL -f "${RELEASE_URL}/m-wells.files.tar.gz" -o repo/m-wells.files.tar.gz || true
+          gh release download latest --repo ${{ github.repository }} --pattern 'm-wells.db.tar.gz' --dir repo || echo "No existing database"
+          gh release download latest --repo ${{ github.repository }} --pattern 'm-wells.files.tar.gz' --dir repo || true
 
           # Detect deleted packages
           REMOVED=""
@@ -112,14 +113,23 @@ jobs:
           repo-remove --sign --key ${{ secrets.GPG_KEY_ID }} repo/m-wells.db.tar.gz ${{ steps.database.outputs.removed }}
 
       - name: Build changed packages
+        id: build
         if: steps.changes.outputs.packages != ''
         run: |
+          FAILED=""
           for pkg in ${{ steps.changes.outputs.packages }}; do
             if [ -d "$pkg" ]; then
               echo "==> Building $pkg"
-              su builder -c "cd $pkg && makepkg -s --noconfirm"
+              if ! su builder -c "cd $pkg && makepkg -s --noconfirm"; then
+                echo "::error::Failed to build $pkg"
+                FAILED="$FAILED $pkg"
+              fi
             fi
           done
+          echo "failed=$FAILED" >> $GITHUB_OUTPUT
+          if [ -n "$FAILED" ]; then
+            echo "Failed packages:$FAILED"
+          fi
 
       - name: Sign packages and update repo database
         if: steps.changes.outputs.packages != ''
@@ -141,7 +151,9 @@ jobs:
 
           # Update repo database
           cd repo
-          repo-add --sign --key ${{ secrets.GPG_KEY_ID }} m-wells.db.tar.gz *.pkg.tar.zst
+          if ls *.pkg.tar.zst 1>/dev/null 2>&1; then
+            repo-add --sign --key ${{ secrets.GPG_KEY_ID }} m-wells.db.tar.gz *.pkg.tar.zst
+          fi
 
       - name: Upload to release
         if: steps.database.outputs.has_work == 'true'
@@ -161,5 +173,22 @@ jobs:
               done
           done
 
-          # Upload files, overwriting any existing
+          # Delete old assets for updated packages (before uploading new versions)
+          for file in repo/*.pkg.tar.zst; do
+            [ -f "$file" ] || continue
+            pkg=$(basename "$file" | sed 's/-[^-]*-[^-]*-[^-]*\.pkg\.tar\.zst$//')
+            echo "Cleaning old assets for: $pkg"
+            gh release view latest --repo ${{ github.repository }} --json assets -q '.assets[].name' | \
+              grep "^${pkg}-" | grep -E '\.(pkg\.tar\.zst|sig)$' | while read -r asset; do
+                gh release delete-asset latest "$asset" --repo ${{ github.repository }} --yes
+              done
+          done
+
+          # Upload files
           gh release upload latest repo/* --repo ${{ github.repository }} --clobber
+
+      - name: Check for build failures
+        if: steps.build.outputs.failed != ''
+        run: |
+          echo "::error::The following packages failed to build:${{ steps.build.outputs.failed }}"
+          exit 1
