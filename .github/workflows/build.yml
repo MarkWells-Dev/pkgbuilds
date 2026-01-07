@@ -157,7 +157,7 @@ jobs:
             # Package-specific smoke tests
             case "$pkgdir" in
               gemini-cli)
-                gemini-cli --version
+                /usr/bin/gemini --version
                 ;;
               rpi-imager)
                 # GUI app - just verify binary is executable
