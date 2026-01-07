@@ -148,22 +148,26 @@ jobs:
         if: steps.changes.outputs.packages != ''
         run: |
           for pkgdir in ${{ steps.changes.outputs.packages }}; do
+            INSTALLED=false
             for pkg in "$pkgdir"/*.pkg.tar.zst; do
               [ -f "$pkg" ] || continue
               echo "==> Testing $pkg"
               pacman -U --noconfirm "$pkg"
+              INSTALLED=true
             done
 
-            # Package-specific smoke tests
-            case "$pkgdir" in
-              gemini-cli)
-                /usr/bin/gemini --version
-                ;;
-              rpi-imager)
-                # GUI app - just verify binary is executable
-                test -x /opt/rpi-imager/rpi-imager.AppImage
-                ;;
-            esac
+            # Package-specific smoke tests (only if package was installed)
+            if [ "$INSTALLED" = "true" ]; then
+              case "$pkgdir" in
+                gemini-cli)
+                  /usr/bin/gemini --version
+                  ;;
+                rpi-imager)
+                  # GUI app - just verify binary is executable
+                  test -x /opt/rpi-imager/rpi-imager.AppImage
+                  ;;
+              esac
+            fi
           done
 
       - name: Sign packages and update repo database
