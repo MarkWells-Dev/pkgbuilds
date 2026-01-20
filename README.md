@@ -10,9 +10,9 @@ curl -sL https://github.com/m-wells.gpg | sudo pacman-key --add -
 sudo pacman-key --lsign-key CCDA692647943A2B
 
 # Add to /etc/pacman.conf (before [core] for priority over official packages)
-[m-wells]
+[mark-wells-dev]
 SigLevel = Required DatabaseOptional
-Server = https://github.com/m-wells/pkgbuilds/releases/latest/download
+Server = https://github.com/mark-wells-dev/pkgbuilds/releases/latest/download
 
 # Sync and install
 sudo pacman -Sy
