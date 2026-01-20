@@ -235,7 +235,7 @@ jobs:
                 gh release delete-asset latest "$asset" --repo ${{ github.repository }} --yes
               done
           done
-          
+
           # Clean up legacy DB files if they exist in the release
           echo "Cleaning up legacy database files..."
           gh release view latest --repo ${{ github.repository }} --json assets -q '.assets[].name' | \

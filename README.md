@@ -5,7 +5,7 @@ Personal Arch Linux package repository with automated builds and version trackin
 ## Usage
 
 ```bash
-# Import and trust the signing key
+# Import the maintainer's signing key (@m-wells)
 curl -sL https://github.com/m-wells.gpg | sudo pacman-key --add -
 sudo pacman-key --lsign-key CCDA692647943A2B
 
@@ -21,9 +21,9 @@ sudo pacman -S gemini-cli rpi-imager
 
 ## Packages
 
-| Package | Source | Description |
-|---------|--------|-------------|
-| gemini-cli | npm | Google's Gemini AI CLI agent |
+| Package    | Source   | Description                  |
+| ---------- | -------- | ---------------------------- |
+| gemini-cli | npm      | Google's Gemini AI CLI agent |
 | rpi-imager | AppImage | Raspberry Pi Imaging Utility |
 
 ## How It Works
@@ -45,12 +45,14 @@ sudo pacman -S gemini-cli rpi-imager
 ## Adding a New Package
 
 1. Create a directory with a `PKGBUILD` (directory name must match `pkgname`):
+
    ```
    my-package/
    └── PKGBUILD    # pkgname=my-package
    ```
 
 2. Add a Renovate comment for version tracking:
+
    ```bash
    pkgver=1.0.0
    # renovate: datasource=npm depName=package-name

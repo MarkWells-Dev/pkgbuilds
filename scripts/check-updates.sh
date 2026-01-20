@@ -11,8 +11,8 @@ source "$LIB_DIR/common.sh"
 
 # Run all package check scripts
 for script in "$PACKAGES_DIR"/*.sh; do
-    if [ -f "$script" ]; then
-        # shellcheck source=/dev/null
-        source "$script"
-    fi
+	if [ -f "$script" ]; then
+		# shellcheck source=/dev/null
+		source "$script"
+	fi
 done

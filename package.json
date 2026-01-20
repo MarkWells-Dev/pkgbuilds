@@ -1,0 +1,19 @@
+{
+  "name": "pkgbuilds",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Personal Arch Linux package repository",
+  "scripts": {
+    "format": "prettier --write \"**/*\"",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "**/*": "prettier --write --ignore-unknown"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "prettier": "^3.0.0",
+    "prettier-plugin-sh": "^0.14.0"
+  }
+}

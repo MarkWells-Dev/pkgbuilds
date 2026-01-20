@@ -12,41 +12,41 @@ provides=('rpi-imager')
 conflicts=('rpi-imager')
 options=('!strip' '!debug')
 source=("Raspberry_Pi_Imager-v${pkgver}-desktop-x86_64.AppImage::https://github.com/raspberrypi/rpi-imager/releases/download/v${pkgver}/Raspberry_Pi_Imager-v${pkgver}-desktop-x86_64.AppImage"
-        "com.raspberrypi.rpi-imager.policy::https://raw.githubusercontent.com/raspberrypi/rpi-imager/v${pkgver}/debian/com.raspberrypi.rpi-imager.policy")
+	"com.raspberrypi.rpi-imager.policy::https://raw.githubusercontent.com/raspberrypi/rpi-imager/v${pkgver}/debian/com.raspberrypi.rpi-imager.policy")
 sha256sums=('f91d031b63cb9e8d521fc2a4cc3703e1f20207af9fd915d6313e718b8b32d7a5' 'f998b4c8da419da3a453a3b8992397fb4b8687b7155eda1c79aa0d7a0eb4e524')
 noextract=("Raspberry_Pi_Imager-v${pkgver}-desktop-x86_64.AppImage")
 
 package() {
-  # Install AppImage
-  install -Dm755 "${srcdir}/Raspberry_Pi_Imager-v${pkgver}-desktop-x86_64.AppImage" \
-    "${pkgdir}/opt/${pkgname}/${pkgname}.AppImage"
+	# Install AppImage
+	install -Dm755 "${srcdir}/Raspberry_Pi_Imager-v${pkgver}-desktop-x86_64.AppImage" \
+		"${pkgdir}/opt/${pkgname}/${pkgname}.AppImage"
 
-  # Create launcher script (uses pkexec for privilege elevation)
-  install -dm755 "${pkgdir}/usr/bin"
-  cat > "${pkgdir}/usr/bin/${pkgname}" << 'EOF'
+	# Create launcher script (uses pkexec for privilege elevation)
+	install -dm755 "${pkgdir}/usr/bin"
+	cat > "${pkgdir}/usr/bin/${pkgname}" << 'EOF'
 #!/bin/sh
 pkexec --disable-internal-agent /opt/rpi-imager/rpi-imager.AppImage "$@"
 EOF
-  chmod 755 "${pkgdir}/usr/bin/${pkgname}"
+	chmod 755 "${pkgdir}/usr/bin/${pkgname}"
 
-  # Extract icon and desktop file from AppImage
-  cd "${srcdir}"
-  chmod +x "Raspberry_Pi_Imager-v${pkgver}-desktop-x86_64.AppImage"
-  "./Raspberry_Pi_Imager-v${pkgver}-desktop-x86_64.AppImage" --appimage-extract
+	# Extract icon and desktop file from AppImage
+	cd "${srcdir}"
+	chmod +x "Raspberry_Pi_Imager-v${pkgver}-desktop-x86_64.AppImage"
+	"./Raspberry_Pi_Imager-v${pkgver}-desktop-x86_64.AppImage" --appimage-extract
 
-  # Install desktop file
-  install -Dm644 squashfs-root/usr/share/applications/com.raspberrypi.rpi-imager.desktop \
-    "${pkgdir}/usr/share/applications/${pkgname}.desktop"
-  sed -i "s|Exec=.*|Exec=/usr/bin/${pkgname}|g" \
-    "${pkgdir}/usr/share/applications/${pkgname}.desktop"
+	# Install desktop file
+	install -Dm644 squashfs-root/usr/share/applications/com.raspberrypi.rpi-imager.desktop \
+		"${pkgdir}/usr/share/applications/${pkgname}.desktop"
+	sed -i "s|Exec=.*|Exec=/usr/bin/${pkgname}|g" \
+		"${pkgdir}/usr/share/applications/${pkgname}.desktop"
 
-  # Install icon
-  install -Dm644 squashfs-root/usr/share/icons/hicolor/scalable/apps/rpi-imager.svg \
-    "${pkgdir}/usr/share/icons/hicolor/scalable/apps/${pkgname}.svg"
+	# Install icon
+	install -Dm644 squashfs-root/usr/share/icons/hicolor/scalable/apps/rpi-imager.svg \
+		"${pkgdir}/usr/share/icons/hicolor/scalable/apps/${pkgname}.svg"
 
-  # Install polkit policy for privilege elevation (with fixed path for AppImage)
-  install -Dm644 "${srcdir}/com.raspberrypi.rpi-imager.policy" \
-    "${pkgdir}/usr/share/polkit-1/actions/com.raspberrypi.rpi-imager.policy"
-  sed -i 's|/usr/bin/rpi-imager|/opt/rpi-imager/rpi-imager.AppImage|g' \
-    "${pkgdir}/usr/share/polkit-1/actions/com.raspberrypi.rpi-imager.policy"
+	# Install polkit policy for privilege elevation (with fixed path for AppImage)
+	install -Dm644 "${srcdir}/com.raspberrypi.rpi-imager.policy" \
+		"${pkgdir}/usr/share/polkit-1/actions/com.raspberrypi.rpi-imager.policy"
+	sed -i 's|/usr/bin/rpi-imager|/opt/rpi-imager/rpi-imager.AppImage|g' \
+		"${pkgdir}/usr/share/polkit-1/actions/com.raspberrypi.rpi-imager.policy"
 }
