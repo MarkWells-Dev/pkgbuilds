@@ -255,12 +255,25 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Downloading existing DB signatures..."
-          # We need the .tar.gz.sig which is valid
+          echo "Downloading existing DB files and signatures..."
+          # Download valid compressed DBs and their signatures
+          gh release download latest --repo ${{ github.repository }} --pattern 'mark-wells-dev.db.tar.gz' --dir repo || true
           gh release download latest --repo ${{ github.repository }} --pattern 'mark-wells-dev.db.tar.gz.sig' --dir repo || true
+          gh release download latest --repo ${{ github.repository }} --pattern 'mark-wells-dev.files.tar.gz' --dir repo || true
           gh release download latest --repo ${{ github.repository }} --pattern 'mark-wells-dev.files.tar.gz.sig' --dir repo || true
 
           cd repo
+          # Synchronize uncompressed/symlink names to match compressed versions
+          if [ -f mark-wells-dev.db.tar.gz ]; then
+             echo "Synchronizing mark-wells-dev.db with mark-wells-dev.db.tar.gz"
+             cp mark-wells-dev.db.tar.gz mark-wells-dev.db
+          fi
+          if [ -f mark-wells-dev.files.tar.gz ]; then
+             echo "Synchronizing mark-wells-dev.files with mark-wells-dev.files.tar.gz"
+             cp mark-wells-dev.files.tar.gz mark-wells-dev.files
+          fi
+
+          # Synchronize signatures
           if [ -f mark-wells-dev.db.tar.gz.sig ]; then
              echo "Copying mark-wells-dev.db.tar.gz.sig to mark-wells-dev.db.sig"
              cp mark-wells-dev.db.tar.gz.sig mark-wells-dev.db.sig
@@ -307,10 +320,9 @@ jobs:
               gh release delete-asset latest "$asset" --repo ${{ github.repository }} --yes
             done
 
-                    # Upload files (only exact artifacts)
-                    # Deduplicate files using sort -u to avoid uploading the same file twice (e.g. *.sig and *.db.sig matching same file)
-                    FILES_TO_UPLOAD=$(ls repo/*.pkg.tar.zst repo/*.sig repo/*.db.tar.gz repo/*.files.tar.gz repo/*.db.sig repo/*.files.sig 2>/dev/null | sort -u | tr '\n' ' ')
-                    
+                              # Upload files (only exact artifacts)
+                              # Deduplicate files using sort -u to avoid uploading the same file twice (e.g. *.sig and *.db.sig matching same file)
+                              FILES_TO_UPLOAD=$(ls repo/*.pkg.tar.zst repo/*.sig repo/*.db.tar.gz repo/*.files.tar.gz repo/*.db.sig repo/*.files.sig repo/*.db repo/*.files 2>/dev/null | sort -u | tr '\n' ' ')                    
                     if [ -n "$FILES_TO_UPLOAD" ]; then
                        echo "Uploading: $FILES_TO_UPLOAD"
                        gh release upload latest $FILES_TO_UPLOAD --repo ${{ github.repository }} --clobber
