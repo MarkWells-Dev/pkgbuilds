@@ -308,7 +308,27 @@ jobs:
             done
 
           # Upload files (only exact artifacts)
-          gh release upload latest repo/*.pkg.tar.zst repo/*.sig repo/*.db.tar.gz repo/*.files.tar.gz repo/*.db.sig repo/*.files.sig --repo ${{ github.repository }} --clobber
+          FILES_TO_UPLOAD=""
+          # Use nullglob to handle missing files gracefully if we were using bash globs directly, 
+          # but here we iterate pattern strings and check for existence.
+          for pattern in repo/*.pkg.tar.zst repo/*.sig repo/*.db.tar.gz repo/*.files.tar.gz repo/*.db.sig repo/*.files.sig; do
+             # Check if the glob actually matched anything (if not, it remains as the pattern string in some shells, 
+             # but here we are relying on shell expansion in the for loop. 
+             # If no match, standard sh/bash passes the literal pattern unless nullglob is set.
+             # So we check if -f exists.)
+             for file in $pattern; do
+                 if [ -f "$file" ]; then
+                    FILES_TO_UPLOAD="$FILES_TO_UPLOAD $file"
+                 fi
+             done
+          done
+
+          if [ -n "$FILES_TO_UPLOAD" ]; then
+             echo "Uploading: $FILES_TO_UPLOAD"
+             gh release upload latest $FILES_TO_UPLOAD --repo ${{ github.repository }} --clobber
+          else
+             echo "No files to upload."
+          fi
 
       - name: Check for build failures
         if: steps.build.outputs.failed != ''
