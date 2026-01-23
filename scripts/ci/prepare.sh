@@ -115,12 +115,28 @@ while read -r line; do
 done < db_versions.txt
 
 # 5. Output Results to GitHub Actions
-# Convert arrays to JSON
-matrix_json=$(printf '%s\n' "${PACKAGES_TO_BUILD[@]}" | jq -R . | jq -s .)
-removed_json=$(printf '%s\n' "${REMOVED_PACKAGES[@]}" | jq -R . | jq -s .)
+# Convert arrays to JSON safely
+if [ ${#PACKAGES_TO_BUILD[@]} -eq 0 ]; then
+    matrix_json="[]"
+else
+    matrix_json=$(printf '%s\n' "${PACKAGES_TO_BUILD[@]}" | jq -R . | jq -s -c .)
+fi
 
-echo "matrix=$matrix_json" >> "$GITHUB_OUTPUT"
-echo "removed=$removed_json" >> "$GITHUB_OUTPUT"
+if [ ${#REMOVED_PACKAGES[@]} -eq 0 ]; then
+    removed_json="[]"
+else
+    removed_json=$(printf '%s\n' "${REMOVED_PACKAGES[@]}" | jq -R . | jq -s -c .)
+fi
+
+# Use heredoc for multi-line values in GITHUB_OUTPUT
+{
+    echo "matrix<<EOF"
+    echo "$matrix_json"
+    echo "EOF"
+    echo "removed<<EOF"
+    echo "$removed_json"
+    echo "EOF"
+} >> "$GITHUB_OUTPUT"
 
 # Determine flags
 if [ ${#PACKAGES_TO_BUILD[@]} -gt 0 ] || [ ${#REMOVED_PACKAGES[@]} -gt 0 ]; then
