@@ -63,15 +63,17 @@ else
         echo "Checking $pkg..."
 
         # Parse PKGBUILD using makepkg (as builder)
-        if ! srcinfo=$(su builder -c "cd $pkg && makepkg --printsrcinfo" 2> /dev/null); then
-            echo "::error::Failed to parse PKGBUILD for $pkg"
+        echo "Parsing PKGBUILD for $pkg..."
+        if ! srcinfo=$(su builder -c "cd $pkg && makepkg --printsrcinfo" 2>&1); then
+            echo "::error::Failed to parse PKGBUILD for $pkg. Error output:"
+            echo "$srcinfo"
             exit 1
         fi
 
-        p_name=$(echo "$srcinfo" | grep -P '^\tpkgname =' | cut -d= -f2 | xargs)
-        p_ver=$(echo "$srcinfo" | grep -P '^\tpkgver =' | cut -d= -f2 | xargs)
-        p_rel=$(echo "$srcinfo" | grep -P '^\tpkgrel =' | cut -d= -f2 | xargs)
-        p_epoch=$(echo "$srcinfo" | grep -P '^\tepoch =' | cut -d= -f2 | xargs)
+        p_name=$(echo "$srcinfo" | grep -P '^\t?pkgname =' | cut -d= -f2 | xargs)
+        p_ver=$(echo "$srcinfo" | grep -P '^\t?pkgver =' | cut -d= -f2 | xargs)
+        p_rel=$(echo "$srcinfo" | grep -P '^\t?pkgrel =' | cut -d= -f2 | xargs)
+        p_epoch=$(echo "$srcinfo" | grep -P '^\t?epoch =' | cut -d= -f2 | xargs)
 
         if [ -n "$p_epoch" ]; then
             local_ver="${p_epoch}:${p_ver}-${p_rel}"
