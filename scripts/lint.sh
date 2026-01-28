@@ -19,7 +19,14 @@ for pkg in $ALL_PACKAGES; do
         FAILURE=1
     fi
 
-    # 2. namcap check (if available)
+    # 2. Source verification (checksum check)
+    echo "Verifying sources for $pkg..."
+    if ! (cd "$pkg" && makepkg --verifysource); then
+        echo "::error file=$pkg/PKGBUILD::Source verification failed"
+        FAILURE=1
+    fi
+
+    # 3. namcap check (if available)
     if command -v namcap > /dev/null; then
         if ! namcap -r PKGBUILD "$pkg/PKGBUILD" > /dev/null; then
             # We don't fail on namcap warnings, but it's good to see them in output if we wanted

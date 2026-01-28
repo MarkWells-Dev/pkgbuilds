@@ -14,7 +14,7 @@ options=('!strip' '!debug' '!lto')
 source=("https://registry.npmjs.org/@google/gemini-cli/-/${pkgname}-${pkgver}.tgz"
     "gemini-wrapper.sh")
 noextract=("${pkgname}-${pkgver}.tgz")
-sha512sums=('ab3de4ad3ed6d7e36c42bd7cb65dcabab173a665ceb8fdc08955acb9cf04159bd079bcc63c9e5304ff8f17bb7769de01046ca0420c3f38ba299d37487895992d'
+sha512sums=('57762e780cfeef3a8d2e8f0a58430a42408bbf2edda7649f617bead750834080b788f6e1d4d1c48d1f9a9db538148fec2fd79c620731a070222ea6d417209134'
     '6874b34f459bdcf2b78f67447cdf734adb2cc5f2e37229198f1359f187bf799451f77f9aaafc5f08e48f4b98175694affa767abac15e170c2af903ad9489f525')
 
 package() {
