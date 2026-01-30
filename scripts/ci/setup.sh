@@ -14,7 +14,7 @@ fi
 
 # Ensure base-devel is present (though the container should have it)
 pacman -Syu --noconfirm
-pacman -S --noconfirm --needed npm fuse2 zlib github-cli sudo git base-devel jq
+pacman -S --noconfirm --needed npm fuse2 zlib github-cli sudo git base-devel jq openssh
 
 # 2. Setup non-root builder user
 if ! id -u builder > /dev/null 2>&1; then
