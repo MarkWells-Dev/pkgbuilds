@@ -8,17 +8,25 @@ echo "==> Publishing to AUR..."
 
 # Setup SSH for AUR
 mkdir -p ~/.ssh
+chmod 700 ~/.ssh
+
 echo "$AUR_SSH_PRIVATE_KEY" > ~/.ssh/aur
 chmod 600 ~/.ssh/aur
 
 # Add AUR host key to known_hosts
-ssh-keyscan -t ed25519 aur.archlinux.org >> ~/.ssh/known_hosts 2> /dev/null
+echo "Fetching AUR host key..."
+ssh-keyscan -t ed25519,rsa aur.archlinux.org >> ~/.ssh/known_hosts 2>&1
+chmod 644 ~/.ssh/known_hosts
+echo "known_hosts contents:"
+cat ~/.ssh/known_hosts
 
-cat >> ~/.ssh/config << EOF
+cat > ~/.ssh/config << EOF
 Host aur.archlinux.org
     IdentityFile ~/.ssh/aur
     User aur
+    StrictHostKeyChecking no
 EOF
+chmod 600 ~/.ssh/config
 
 # Configure git
 git config --global user.name "Mark Wells"
