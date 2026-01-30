@@ -32,6 +32,7 @@ depends=('python'
     'python-websockets'
     'python-textual'
     'python-flask'
+    'python-certifi'
 )
 optdepends=(
     'python-fpdf2: PDF export support'
@@ -44,7 +45,6 @@ optdepends=(
     'python-paramiko: SSH/SFTP support'
     'python-pexpect: Automation support'
     'python-google-auth: Google auth support'
-    'python-certifi: SSL certificate support'
     'python-boto3: AWS SDK support'
     'python-yaml: YAML support'
     'python-google-api-python-client: Google API support'
