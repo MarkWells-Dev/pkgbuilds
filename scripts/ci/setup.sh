@@ -23,6 +23,15 @@ if ! id -u builder > /dev/null 2>&1; then
     echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 fi
 
+# 2.5 Install AUR helper (paru-bin)
+echo "==> Installing paru-bin..."
+su builder -c "
+    cd /tmp
+    git clone https://aur.archlinux.org/paru-bin.git
+    cd paru-bin
+    makepkg -si --noconfirm
+"
+
 # 3. Fix permissions for the workspace
 # GitHub Actions checkouts are owned by root in containers
 chown -R builder:builder .
