@@ -24,11 +24,13 @@ sudo pacman -S <package-name>
 
 ## Packages
 
-| Package    | Source   | Description                   |
-| ---------- | -------- | ----------------------------- |
-| gemini-cli | npm      | Google's Gemini AI CLI agent  |
-| rpi-imager | AppImage | Raspberry Pi Imaging Utility  |
-| virtctl    | Binary   | Kubernetes Virtualization CLI |
+| Package                    | Source   | Description                   |
+| -------------------------- | -------- | ----------------------------- |
+| gemini-cli                 | npm      | Google's Gemini AI CLI agent  |
+| keeper-commander           | PyPI     | Keeper Password Manager CLI   |
+| keeper-secrets-manager-cli | PyPI     | Keeper Secrets Manager CLI    |
+| rpi-imager                 | AppImage | Raspberry Pi Imaging Utility  |
+| virtctl                    | Binary   | Kubernetes Virtualization CLI |
 
 ## How It Works
 
@@ -49,10 +51,10 @@ sudo pacman -S <package-name>
 
 ## Adding a New Package
 
-1. Create a directory with a `PKGBUILD` (directory name must match `pkgname`):
+1. Create a directory in `pkgs/` with a `PKGBUILD` (directory name must match `pkgname`):
 
    ```
-   my-package/
+   pkgs/my-package/
    └── PKGBUILD    # pkgname=my-package
    ```
 

@@ -45,7 +45,7 @@ rm -rf repo/db_content
 
 # 3. Scan Local Packages
 # Find directories containing PKGBUILD
-ALL_PACKAGES=$(find . -maxdepth 2 -name PKGBUILD -printf '%h\n' | sed 's|^\./||' | sort | tr '\n' ' ' | xargs)
+ALL_PACKAGES=$(find . -maxdepth 3 -name PKGBUILD -printf '%h\n' | sed 's|^\./||' | sort | tr '\n' ' ' | xargs)
 echo "Local packages: $ALL_PACKAGES"
 
 PACKAGES_TO_BUILD=()
@@ -81,9 +81,8 @@ else
             local_ver="${p_ver}-${p_rel}"
         fi
 
-        # Find version in DB
-        # We search by package directory name, assuming 1:1 mapping for now
-        db_ver=$(grep "^$pkg " db_versions.txt | cut -d' ' -f2 || echo "")
+        # Find version in DB using actual package name (not directory path)
+        db_ver=$(grep "^$p_name " db_versions.txt | cut -d' ' -f2 || echo "")
 
         if [ -z "$db_ver" ]; then
             echo "New package: $pkg ($local_ver)"
@@ -105,10 +104,11 @@ fi
 while read -r line; do
     [ -z "$line" ] && continue
     db_name=$(echo "$line" | cut -d' ' -f1)
-    # Check if db_name exists in ALL_PACKAGES
+    # Check if db_name exists in ALL_PACKAGES (compare using basename since paths are now pkgs/name)
     found=false
     for pkg in $ALL_PACKAGES; do
-        if [ "$pkg" = "$db_name" ]; then
+        pkg_basename=$(basename "$pkg")
+        if [ "$pkg_basename" = "$db_name" ]; then
             found=true
             break
         fi

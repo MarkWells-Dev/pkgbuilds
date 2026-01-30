@@ -6,7 +6,7 @@ set -e
 echo "==> Linting PKGBUILDs..."
 
 # Find all directories containing PKGBUILD
-ALL_PACKAGES=$(find . -maxdepth 2 -name PKGBUILD -printf '%h\n' | sed 's|\./||' | sort)
+ALL_PACKAGES=$(find . -maxdepth 3 -name PKGBUILD -printf '%h\n' | sed 's|\./||' | sort)
 
 FAILURE=0
 

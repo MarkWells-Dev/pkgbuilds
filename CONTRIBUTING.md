@@ -34,9 +34,10 @@ updpkgsums
 Each package is a directory containing a `PKGBUILD`. The directory name **must** match the `pkgname` in the PKGBUILD.
 
 ```text
-gemini-cli/PKGBUILD     # npm package wrapper (arch='any')
-rpi-imager/PKGBUILD     # AppImage wrapper (arch='x86_64')
-virtctl/PKGBUILD        # Binary download
+pkgs/
+├── gemini-cli/PKGBUILD     # npm package wrapper (arch='any')
+├── rpi-imager/PKGBUILD     # AppImage wrapper (arch='x86_64')
+└── virtctl/PKGBUILD        # Binary download
 ```
 
 ## Package Patterns
