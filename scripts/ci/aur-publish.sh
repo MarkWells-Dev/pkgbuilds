@@ -14,19 +14,11 @@ echo "$AUR_SSH_PRIVATE_KEY" > ~/.ssh/aur
 chmod 600 ~/.ssh/aur
 
 # Add AUR host key to known_hosts
-echo "Fetching AUR host key..."
-ssh-keyscan -t ed25519,rsa aur.archlinux.org >> ~/.ssh/known_hosts 2>&1
+ssh-keyscan -t ed25519 aur.archlinux.org >> ~/.ssh/known_hosts 2> /dev/null
 chmod 644 ~/.ssh/known_hosts
-echo "known_hosts contents:"
-cat ~/.ssh/known_hosts
 
-cat > ~/.ssh/config << EOF
-Host aur.archlinux.org
-    IdentityFile ~/.ssh/aur
-    User aur
-    StrictHostKeyChecking no
-EOF
-chmod 600 ~/.ssh/config
+# Use GIT_SSH_COMMAND to force SSH options
+export GIT_SSH_COMMAND="ssh -i ~/.ssh/aur -o UserKnownHostsFile=~/.ssh/known_hosts -o StrictHostKeyChecking=no"
 
 # Configure git
 git config --global user.name "Mark Wells"
