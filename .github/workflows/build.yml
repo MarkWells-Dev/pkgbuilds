@@ -139,6 +139,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
           REMOVED_JSON: ${{ needs.prepare.outputs.removed }}
         run: ./scripts/ci/publish.sh
 

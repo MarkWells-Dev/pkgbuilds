@@ -59,7 +59,11 @@ for pkg in *.pkg.tar.zst; do
     # Detach sign if sig doesn't exist
     if [ ! -f "${pkg}.sig" ]; then
         echo "Signing $pkg..."
-        gpg --batch --yes --pinentry-mode loopback --detach-sign --no-armor "$pkg"
+        if [ -n "$GPG_PASSPHRASE" ]; then
+            echo "$GPG_PASSPHRASE" | gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 --detach-sign --no-armor "$pkg"
+        else
+            gpg --batch --yes --pinentry-mode loopback --detach-sign --no-armor "$pkg"
+        fi
     fi
 done
 
