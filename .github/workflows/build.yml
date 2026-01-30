@@ -52,9 +52,25 @@ jobs:
           path: repo/
           compression-level: 0
 
-  build:
+  aur-publish:
     needs: prepare
-    if: ${{ fromJson(needs.prepare.outputs.matrix)[0] != null }}
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    container: archlinux:base-devel
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup environment
+        run: ./scripts/ci/setup.sh
+
+      - name: Publish to AUR
+        env:
+          AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+        run: ./scripts/ci/aur-publish.sh
+
+  build:
+    needs: [prepare, aur-publish]
+    if: ${{ always() && needs.prepare.result == 'success' && fromJson(needs.prepare.outputs.matrix)[0] != null }}
     runs-on: ubuntu-latest
     container: archlinux:base-devel
     strategy:

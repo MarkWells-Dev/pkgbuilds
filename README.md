@@ -8,9 +8,9 @@ Personal Arch Linux package repository with automated builds and version trackin
 ## Usage
 
 ```bash
-# Import the maintainer's signing key (@m-wells)
-curl -sL https://github.com/m-wells.gpg | sudo pacman-key --add -
-sudo pacman-key --lsign-key CCDA692647943A2B
+# Import the maintainer's signing key
+sudo pacman-key --keyserver keys.openpgp.org --recv-keys ED9FEE0BB96D6A5E
+sudo pacman-key --lsign-key ED9FEE0BB96D6A5E
 
 # Add to /etc/pacman.conf (before [core] for priority over official packages)
 [mark-wells-dev]
