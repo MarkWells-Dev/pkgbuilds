@@ -45,19 +45,38 @@ echo "==> Setting up local package repository..."
 mkdir -p /var/local-repo
 chown builder:builder /var/local-repo
 
-# Add local repo and markwells-dev repo to pacman.conf (before other repos)
-# local-repo: for packages built in current CI run
-# markwells-dev: for packages from previous CI runs (published to GitHub releases)
+# Add local-repo to pacman.conf
 cat >> /etc/pacman.conf << 'EOF'
 
 [local-repo]
 SigLevel = Optional TrustAll
 Server = file:///var/local-repo
+EOF
 
-[markwells-dev]
+# Determine which remote repo to use (fallback to old name for migration)
+REPO_NAME="markwells-dev"
+REPO_URL="https://github.com/MarkWells-Dev/pkgbuilds/releases/download/latest/${REPO_NAME}.db.tar.gz"
+
+if ! curl -sL --output /dev/null --silent --fail "$REPO_URL"; then
+    OLD_REPO_NAME="mark-wells-dev"
+    OLD_REPO_URL="https://github.com/MarkWells-Dev/pkgbuilds/releases/download/latest/${OLD_REPO_NAME}.db.tar.gz"
+    if curl -sL --output /dev/null --silent --fail "$OLD_REPO_URL"; then
+        echo "==> markwells-dev not found, falling back to $OLD_REPO_NAME for migration"
+        REPO_NAME=$OLD_REPO_NAME
+    else
+        REPO_NAME=""
+    fi
+fi
+
+if [ -n "$REPO_NAME" ]; then
+    echo "==> Adding $REPO_NAME repository to pacman.conf"
+    cat >> /etc/pacman.conf << EOF
+
+[$REPO_NAME]
 SigLevel = Never
 Server = https://github.com/MarkWells-Dev/pkgbuilds/releases/download/latest
 EOF
+fi
 
 # Initialize empty repo database with proper symlinks
 # repo-add needs at least one package, so we create empty db manually
