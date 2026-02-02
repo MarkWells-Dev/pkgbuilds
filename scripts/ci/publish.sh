@@ -44,8 +44,8 @@ if [ -n "$REMOVED_JSON" ] && [ "$REMOVED_JSON" != "[]" ]; then
 
     # Run repo-remove
     # We need the db file. prepare.sh downloaded it to repo/
-    if [ -f repo/mark-wells-dev.db.tar.gz ]; then
-        repo-remove --sign --key "$GPG_KEY_ID" repo/mark-wells-dev.db.tar.gz $REMOVED_LIST
+    if [ -f repo/markwells-dev.db.tar.gz ]; then
+        repo-remove --sign --key "$GPG_KEY_ID" repo/markwells-dev.db.tar.gz $REMOVED_LIST
     else
         echo "Warning: Database not found, cannot remove packages."
     fi
@@ -73,14 +73,14 @@ done
 if ls *.pkg.tar.zst 1> /dev/null 2>&1; then
     echo "Updating database..."
     # We use the renamed files (with dots), repo-add handles them fine.
-    repo-add --sign --key "$GPG_KEY_ID" mark-wells-dev.db.tar.gz *.pkg.tar.zst
+    repo-add --sign --key "$GPG_KEY_ID" markwells-dev.db.tar.gz *.pkg.tar.zst
 
     # Sync legacy/symlink signatures
-    if [ -f mark-wells-dev.db.tar.gz.sig ]; then
-        cp -f mark-wells-dev.db.tar.gz.sig mark-wells-dev.db.sig 2> /dev/null || true
+    if [ -f markwells-dev.db.tar.gz.sig ]; then
+        cp -f markwells-dev.db.tar.gz.sig markwells-dev.db.sig 2> /dev/null || true
     fi
-    if [ -f mark-wells-dev.files.tar.gz.sig ]; then
-        cp -f mark-wells-dev.files.tar.gz.sig mark-wells-dev.files.sig 2> /dev/null || true
+    if [ -f markwells-dev.files.tar.gz.sig ]; then
+        cp -f markwells-dev.files.tar.gz.sig markwells-dev.files.sig 2> /dev/null || true
     fi
 fi
 

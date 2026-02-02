@@ -17,17 +17,27 @@ mkdir -p repo
 # 1. Download Repository Database
 echo "==> Downloading repository database..."
 
-if ! gh release download latest --repo "$GITHUB_REPOSITORY" --pattern 'mark-wells-dev.db.tar.gz' --dir repo 2> /dev/null; then
-    echo "No existing database found. Starting fresh."
+if ! gh release download latest --repo "$GITHUB_REPOSITORY" --pattern 'markwells-dev.db.tar.gz' --dir repo 2> /dev/null; then
+    echo "No new database found. Checking for old 'mark-wells-dev' database for migration..."
+    if gh release download latest --repo "$GITHUB_REPOSITORY" --pattern 'mark-wells-dev.db.tar.gz' --dir repo 2> /dev/null; then
+        echo "Found old database. Migrating to 'markwells-dev'..."
+        mv repo/mark-wells-dev.db.tar.gz repo/markwells-dev.db.tar.gz
+        # Also try to get the old files db if it exists
+        if gh release download latest --repo "$GITHUB_REPOSITORY" --pattern 'mark-wells-dev.files.tar.gz' --dir repo 2> /dev/null; then
+            mv repo/mark-wells-dev.files.tar.gz repo/markwells-dev.files.tar.gz
+        fi
+    else
+        echo "No existing database found. Starting fresh."
+    fi
 else
     # Also try to get the files db
-    gh release download latest --repo "$GITHUB_REPOSITORY" --pattern 'mark-wells-dev.files.tar.gz' --dir repo 2> /dev/null || true
+    gh release download latest --repo "$GITHUB_REPOSITORY" --pattern 'markwells-dev.files.tar.gz' --dir repo 2> /dev/null || true
 fi
 
 # Extract DB to read versions
 mkdir -p repo/db_content
-if [ -f repo/mark-wells-dev.db.tar.gz ]; then
-    tar -xf repo/mark-wells-dev.db.tar.gz -C repo/db_content
+if [ -f repo/markwells-dev.db.tar.gz ]; then
+    tar -xf repo/markwells-dev.db.tar.gz -C repo/db_content
 fi
 
 # 2. Map Current DB Versions

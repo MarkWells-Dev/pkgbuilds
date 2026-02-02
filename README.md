@@ -1,7 +1,7 @@
 # pkgbuilds
 
-[![Build packages](https://github.com/mark-wells-dev/pkgbuilds/actions/workflows/build.yml/badge.svg)](https://github.com/mark-wells-dev/pkgbuilds/actions/workflows/build.yml)
-[![Check for Updates](https://github.com/mark-wells-dev/pkgbuilds/actions/workflows/watch.yml/badge.svg)](https://github.com/mark-wells-dev/pkgbuilds/actions/workflows/watch.yml)
+[![Build packages](https://github.com/markwells-dev/pkgbuilds/actions/workflows/build.yml/badge.svg)](https://github.com/markwells-dev/pkgbuilds/actions/workflows/build.yml)
+[![Check for Updates](https://github.com/markwells-dev/pkgbuilds/actions/workflows/watch.yml/badge.svg)](https://github.com/markwells-dev/pkgbuilds/actions/workflows/watch.yml)
 
 Personal Arch Linux package repository with automated builds and version tracking.
 
@@ -13,9 +13,9 @@ sudo pacman-key --keyserver keys.openpgp.org --recv-keys ED9FEE0BB96D6A5E
 sudo pacman-key --lsign-key ED9FEE0BB96D6A5E
 
 # Add to /etc/pacman.conf (before [core] for priority over official packages)
-[mark-wells-dev]
+[markwells-dev]
 SigLevel = Required DatabaseOptional
-Server = https://github.com/mark-wells-dev/pkgbuilds/releases/latest/download
+Server = https://github.com/markwells-dev/pkgbuilds/releases/latest/download
 
 # Sync and install
 sudo pacman -Sy

@@ -1,4 +1,4 @@
-# Maintainer: Mark Wells <contact@markwells.dev>
+# Maintainer: Mark Wells <contact at markwells dot dev>
 pkgname=rpi-imager
 pkgver=2.0.6
 pkgrel=1

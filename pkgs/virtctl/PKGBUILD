@@ -1,4 +1,4 @@
-# Maintainer: Mark Wells <contact@markwells.dev>
+# Maintainer: Mark Wells <contact at markwells dot dev>
 pkgname=virtctl
 pkgver=1.7.0
 pkgrel=1

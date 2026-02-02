@@ -1,4 +1,4 @@
-# Maintainer: Mark Wells <contact@markwells.dev>
+# Maintainer: Mark Wells <contact at markwells dot dev>
 # Packaged from npm
 pkgname=gemini-cli
 pkgver=0.26.0

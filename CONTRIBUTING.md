@@ -2,10 +2,10 @@
 
 This guide provides instructions for building, testing, and adding packages to this repository.
 
-For detailed documentation, see the [Wiki](https://github.com/Mark-Wells-Dev/pkgbuilds/wiki):
+For detailed documentation, see the [Wiki](https://github.com/MarkWells-Dev/pkgbuilds/wiki):
 
-- [Build Patterns](https://github.com/Mark-Wells-Dev/pkgbuilds/wiki/Build-Patterns) - npm, Python, AppImage, and binary packaging
-- [CI/CD Workflow](https://github.com/Mark-Wells-Dev/pkgbuilds/wiki/CI-CD) - Pipeline, dependency resolution, and deployment
+- [Build Patterns](https://github.com/MarkWells-Dev/pkgbuilds/wiki/Build-Patterns) - npm, Python, AppImage, and binary packaging
+- [CI/CD Workflow](https://github.com/MarkWells-Dev/pkgbuilds/wiki/CI-CD) - Pipeline, dependency resolution, and deployment
 
 ## Development Environment
 
