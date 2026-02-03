@@ -22,7 +22,7 @@ concurrency:
 
 jobs:
   prepare:
-    runs-on: homeserver-pool
+    runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-latest' }}
     container: archlinux:base-devel
     outputs:
       matrix: ${{ steps.scan.outputs.matrix }}
@@ -56,7 +56,7 @@ jobs:
   aur-publish:
     needs: prepare
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: homeserver-pool
+    runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-latest' }}
     container: archlinux:base-devel
     steps:
       - uses: actions/checkout@v4
@@ -72,7 +72,7 @@ jobs:
   build:
     needs: [prepare, aur-publish]
     if: ${{ always() && needs.prepare.result == 'success' && fromJson(needs.prepare.outputs.matrix)[0] != null }}
-    runs-on: homeserver-pool
+    runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-latest' }}
     container: archlinux:base-devel
     steps:
       - uses: actions/checkout@v4
@@ -109,7 +109,7 @@ jobs:
       needs.prepare.outputs.run_publish == 'true' &&
       (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
       github.ref == 'refs/heads/main'
-    runs-on: homeserver-pool
+    runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-latest' }}
     container: archlinux:base-devel
     permissions:
       contents: write

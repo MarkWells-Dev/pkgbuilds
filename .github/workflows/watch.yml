@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   check-updates:
-    runs-on: homeserver-pool
+    runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@v4
         with:
