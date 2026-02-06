@@ -21,8 +21,8 @@ chmod 644 ~/.ssh/known_hosts
 export GIT_SSH_COMMAND="ssh -i ~/.ssh/aur -o UserKnownHostsFile=~/.ssh/known_hosts -o StrictHostKeyChecking=no"
 
 # Configure git
-git config --global user.name "Mark Wells"
-git config --global user.email "contact@markwells.dev"
+git config --global user.name "${AUR_USERNAME}"
+git config --global user.email "${AUR_EMAIL}"
 git config --global init.defaultBranch master
 
 # Find packages with .aur marker
