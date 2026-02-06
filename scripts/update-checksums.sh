@@ -45,11 +45,7 @@ checksums=$(
     echo "${sums[*]}" | tr '\n' ' ' | sed 's/ $//'
 )
 
-# Replace the existing checksum line
-if [ "$algo" == "sha512" ]; then
-    sed -i "s/sha512sums=.*/sha512sums=($checksums)/" PKGBUILD
-else
-    sed -i "s/sha256sums=.*/sha256sums=($checksums)/" PKGBUILD
-fi
+# Replace the existing checksum array (handles multi-line)
+perl -i -0777 -pe "s/${algo}sums=\(.*?\)/${algo}sums=($checksums)/sg" "$PKGBUILD"
 
 echo "Updated $algo checksums in $PKGBUILD" >&2
