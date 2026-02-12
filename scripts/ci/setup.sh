@@ -17,6 +17,11 @@ if [ ! -f /etc/arch-release ]; then
 fi
 
 # Ensure base-devel is present (though the container should have it)
+echo "==> Updating keyring..."
+pacman-key --init
+pacman-key --populate archlinux
+pacman -Sy --noconfirm archlinux-keyring
+
 pacman -Syu --noconfirm
 pacman -S --noconfirm --needed npm fuse2 zlib github-cli sudo git base-devel jq openssh
 

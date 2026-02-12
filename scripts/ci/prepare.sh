@@ -31,22 +31,32 @@ fi
 echo "==> Downloading repository database..."
 
 MIGRATED=false
-if ! gh release download latest --repo "$GITHUB_REPOSITORY" --pattern "${REPO_NAME}.db.tar.gz" --dir repo 2> /dev/null; then
-    echo "No new database found. Checking for old '${OLD_REPO_NAME}' database for migration..."
-    if gh release download latest --repo "$GITHUB_REPOSITORY" --pattern "${OLD_REPO_NAME}.db.tar.gz" --dir repo 2> /dev/null; then
-        echo "Found old database. Migrating to '${REPO_NAME}'..."
-        mv "repo/${OLD_REPO_NAME}.db.tar.gz" "repo/${REPO_NAME}.db.tar.gz"
-        # Also try to get the old files db if it exists
-        if gh release download latest --repo "$GITHUB_REPOSITORY" --pattern "${OLD_REPO_NAME}.files.tar.gz" --dir repo 2> /dev/null; then
-            mv "repo/${OLD_REPO_NAME}.files.tar.gz" "repo/${REPO_NAME}.files.tar.gz"
-        fi
+# Attempt to download current DB
+if ! err=$(gh release download latest --repo "$GITHUB_REPOSITORY" --pattern "${REPO_NAME}.db.tar.gz" --dir repo 2>&1); then
+    # Check if failure is due to missing release or asset
+    if echo "$err" | grep -qiE "not found|no release found"; then
+        echo "No new database found ($err). Checking for old '${OLD_REPO_NAME}' database for migration..."
 
-        # To migrate successfully, we need the actual package files for repo-add
-        echo "Downloading existing packages for database migration..."
-        gh release download latest --repo "$GITHUB_REPOSITORY" --pattern '*.pkg.tar.zst' --dir repo 2> /dev/null || true
-        MIGRATED=true
+        # Check for old DB
+        if gh release download latest --repo "$GITHUB_REPOSITORY" --pattern "${OLD_REPO_NAME}.db.tar.gz" --dir repo 2> /dev/null; then
+            echo "Found old database. Migrating to '${REPO_NAME}'..."
+            mv "repo/${OLD_REPO_NAME}.db.tar.gz" "repo/${REPO_NAME}.db.tar.gz"
+            # Also try to get the old files db if it exists
+            if gh release download latest --repo "$GITHUB_REPOSITORY" --pattern "${OLD_REPO_NAME}.files.tar.gz" --dir repo 2> /dev/null; then
+                mv "repo/${OLD_REPO_NAME}.files.tar.gz" "repo/${REPO_NAME}.files.tar.gz"
+            fi
+
+            # To migrate successfully, we need the actual package files for repo-add
+            echo "Downloading existing packages for database migration..."
+            gh release download latest --repo "$GITHUB_REPOSITORY" --pattern '*.pkg.tar.zst' --dir repo 2> /dev/null || true
+            MIGRATED=true
+        else
+            echo "No existing database found. Starting fresh."
+        fi
     else
-        echo "No existing database found. Starting fresh."
+        # Some other error occurred (network, auth, etc.)
+        echo "::error::Failed to download database: $err"
+        exit 1
     fi
 else
     # Also try to get the files db
