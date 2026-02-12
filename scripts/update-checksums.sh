@@ -42,7 +42,15 @@ for src in "${source[@]}"; do
 
     echo "Fetching: $url" >&2
     if [[ "$url" == http* ]]; then
-        sha=$(curl -sL "$url" | $sum_cmd | cut -d' ' -f1)
+        # Use a temporary file to ensure we don't hash error pages
+        tmp_file=$(mktemp)
+        if ! curl -sLf "$url" -o "$tmp_file"; then
+            echo "Error: Failed to download $url" >&2
+            rm -f "$tmp_file"
+            exit 1
+        fi
+        sha=$($sum_cmd "$tmp_file" | cut -d' ' -f1)
+        rm -f "$tmp_file"
     else
         # Local file
         if [ -f "$url" ]; then
