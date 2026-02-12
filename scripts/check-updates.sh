@@ -12,7 +12,12 @@ source "$LIB_DIR/common.sh"
 # Run all package check scripts
 for script in "$PACKAGES_DIR"/*.sh; do
     if [ -f "$script" ]; then
+        echo "::group::Checking $(basename "$script")"
+        # Run in subshell so a failure doesn't stop the master script
         # shellcheck source=/dev/null
-        source "$script"
+        if ! (source "$script"); then
+            echo "::error::Failed to check updates for $(basename "$script")"
+        fi
+        echo "::endgroup::"
     fi
 done

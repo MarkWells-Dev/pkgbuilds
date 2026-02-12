@@ -43,7 +43,11 @@ perform_update() {
     sed -i "s/^pkgrel=.*/pkgrel=1/" "$pkgbuild"
 
     # Update checksums
-    "$REPO_ROOT/scripts/update-checksums.sh" "$pkgbuild"
+    if ! "$REPO_ROOT/scripts/update-checksums.sh" "$pkgbuild"; then
+        echo "::error::Checksum update failed for $pkg_name. Reverting changes..."
+        git checkout "$pkgbuild"
+        return 1
+    fi
 
     # Commit changes
     if [ -n "$CI" ]; then
