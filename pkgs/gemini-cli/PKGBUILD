@@ -14,7 +14,7 @@ options=('!strip' '!debug' '!lto')
 source=("https://registry.npmjs.org/@google/gemini-cli/-/${pkgname}-${pkgver}.tgz"
     "gemini-wrapper.sh")
 noextract=("${pkgname}-${pkgver}.tgz")
-sha512sums=('fb0defd4cb6529330c89db3fa7f5605c8da17061719d4a7dbb25105d70a57da031d666bf4de4a1489c1d621ee4b49cc7bbc54df1bdc37c9772a3c6bdfaf62c2d' '6874b34f459bdcf2b78f67447cdf734adb2cc5f2e37229198f1359f187bf799451f77f9aaafc5f08e48f4b98175694affa767abac15e170c2af903ad9489f525')
+sha512sums=('7ffda0691a561ec299f89eb8e79123128a70bda7e533975d26a916b74ac4028fd24fefa66203f619c8f1e86d2c6a86125d6a4f087b6ede2c58d99794d3aa1a03' '6874b34f459bdcf2b78f67447cdf734adb2cc5f2e37229198f1359f187bf799451f77f9aaafc5f08e48f4b98175694affa767abac15e170c2af903ad9489f525')
 
 package() {
     npm install -g --prefix "${pkgdir}/usr" \
