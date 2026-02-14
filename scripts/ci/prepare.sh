@@ -244,12 +244,38 @@ if [ ${#PACKAGES_TO_BUILD[@]} -gt 0 ]; then
     echo "Build order: ${PACKAGES_TO_BUILD[*]}"
 fi
 
-# 6. Output results to GitHub Actions
+# 6. Split packages by runner
+# Packages with a .runner marker file go to a separate heavy build job
+PACKAGES_DEFAULT=()
+PACKAGES_HEAVY=()
+HEAVY_RUNNER=""
+
+for pkg in "${PACKAGES_TO_BUILD[@]}"; do
+    if [ -f "$pkg/.runner" ]; then
+        PACKAGES_HEAVY+=("$pkg")
+        HEAVY_RUNNER=$(cat "$pkg/.runner" | tr -d '[:space:]')
+    else
+        PACKAGES_DEFAULT+=("$pkg")
+    fi
+done
+
+if [ ${#PACKAGES_HEAVY[@]} -gt 0 ]; then
+    echo "Heavy packages (runner: $HEAVY_RUNNER): ${PACKAGES_HEAVY[*]}"
+    echo "Default packages: ${PACKAGES_DEFAULT[*]}"
+fi
+
+# 7. Output results to GitHub Actions
 # Convert arrays to JSON safely
-if [ ${#PACKAGES_TO_BUILD[@]} -eq 0 ]; then
+if [ ${#PACKAGES_DEFAULT[@]} -eq 0 ]; then
     matrix_json="[]"
 else
-    matrix_json=$(printf '%s\n' "${PACKAGES_TO_BUILD[@]}" | jq -R . | jq -s -c .)
+    matrix_json=$(printf '%s\n' "${PACKAGES_DEFAULT[@]}" | jq -R . | jq -s -c .)
+fi
+
+if [ ${#PACKAGES_HEAVY[@]} -eq 0 ]; then
+    matrix_heavy_json="[]"
+else
+    matrix_heavy_json=$(printf '%s\n' "${PACKAGES_HEAVY[@]}" | jq -R . | jq -s -c .)
 fi
 
 if [ ${#REMOVED_PACKAGES[@]} -eq 0 ]; then
@@ -263,6 +289,10 @@ fi
     echo "matrix<<EOF"
     echo "$matrix_json"
     echo "EOF"
+    echo "matrix_heavy<<EOF"
+    echo "$matrix_heavy_json"
+    echo "EOF"
+    echo "heavy_runner=$HEAVY_RUNNER"
     echo "removed<<EOF"
     echo "$removed_json"
     echo "EOF"
@@ -285,4 +315,6 @@ fi
 
 echo "Preparation complete."
 echo "Matrix: $matrix_json"
+echo "Matrix (heavy): $matrix_heavy_json"
+echo "Heavy runner: $HEAVY_RUNNER"
 echo "Removed: $removed_json"
