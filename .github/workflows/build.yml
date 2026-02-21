@@ -34,6 +34,9 @@ jobs:
       run_publish: ${{ steps.scan.outputs.run_publish }}
       checkout_sha: ${{ steps.sha.outputs.checkout_sha }}
     steps:
+      - name: Install git
+        run: pacman -Sy --noconfirm git
+
       - uses: actions/checkout@v4
 
       - name: Setup environment
@@ -87,6 +90,9 @@ jobs:
     runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-latest' }}
     container: archlinux:base-devel
     steps:
+      - name: Install git
+        run: pacman -Sy --noconfirm git
+
       - uses: actions/checkout@v4
         with:
           ref: ${{ needs.prepare.outputs.checkout_sha }}
@@ -107,6 +113,9 @@ jobs:
     runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-latest' }}
     container: archlinux:base-devel
     steps:
+      - name: Install git
+        run: pacman -Sy --noconfirm git
+
       - uses: actions/checkout@v4
         with:
           ref: ${{ needs.prepare.outputs.checkout_sha }}
@@ -139,6 +148,9 @@ jobs:
     runs-on: ${{ needs.prepare.outputs.heavy_runner }}
     container: archlinux:base-devel
     steps:
+      - name: Install git
+        run: pacman -Sy --noconfirm git
+
       - uses: actions/checkout@v4
         with:
           ref: ${{ needs.prepare.outputs.checkout_sha }}
@@ -181,6 +193,9 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Install git
+        run: pacman -Sy --noconfirm git
+
       - uses: actions/checkout@v4
         with:
           ref: ${{ needs.prepare.outputs.checkout_sha }}
