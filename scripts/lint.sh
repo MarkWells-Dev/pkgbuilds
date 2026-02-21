@@ -67,6 +67,7 @@ done
 if [ ${#REPAIRED[@]} -gt 0 ]; then
     echo "==> Auto-repaired checksums for: ${REPAIRED[*]}"
     if [ -n "$CI" ]; then
+        git config --global --add safe.directory "$(pwd)"
         git config --global user.name "Updater Bot"
         git config --global user.email "bot@noreply.github.com"
     fi
