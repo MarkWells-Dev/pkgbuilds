@@ -42,15 +42,21 @@ for src in "${source[@]}"; do
 
     echo "Fetching: $url" >&2
     if [[ "$url" == http* ]]; then
-        # Use a temporary file to ensure we don't hash error pages
-        tmp_file=$(mktemp)
-        if ! curl -sLf "$url" -o "$tmp_file"; then
+        # Determine the local filename (matches what makepkg expects)
+        if [[ "$src" == *::* ]]; then
+            local_name="${src%%::*}"
+        else
+            local_name="$(basename "$url")"
+        fi
+
+        # Download to the PKGBUILD directory so makepkg finds it on
+        # subsequent --verifysource without re-downloading
+        if ! curl -sLf "$url" -o "$local_name"; then
             echo "Error: Failed to download $url" >&2
-            rm -f "$tmp_file"
+            rm -f "$local_name"
             exit 1
         fi
-        sha=$($sum_cmd "$tmp_file" | cut -d' ' -f1)
-        rm -f "$tmp_file"
+        sha=$($sum_cmd "$local_name" | cut -d' ' -f1)
     else
         # Local file
         if [ -f "$url" ]; then

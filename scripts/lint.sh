@@ -43,15 +43,9 @@ for pkg in $ALL_PACKAGES; do
         echo "::warning file=$pkg/PKGBUILD::Source verification failed, attempting auto-repair..."
 
         # Auto-repair: re-compute checksums and retry
+        # update-checksums.sh saves downloaded files to the PKGBUILD dir,
+        # so makepkg finds them on retry instead of re-downloading
         if "$SCRIPT_DIR/update-checksums.sh" "$pkg/PKGBUILD"; then
-            # Delete cached source files so makepkg re-downloads them
-            # (the cached files may differ from what update-checksums.sh fetched)
-            # shellcheck disable=SC1090,SC2154
-            (source "$pkg/PKGBUILD" && cd "$pkg" && for src in "${source[@]}"; do
-                local_name="${src%%::*}"
-                [ "$local_name" != "$src" ] || local_name="$(basename "$src")"
-                rm -f "$local_name"
-            done)
             echo "Checksums updated, retrying verification..."
             if run_verifysource "$pkg"; then
                 echo "::warning file=$pkg/PKGBUILD::Checksums were stale — auto-repaired"
