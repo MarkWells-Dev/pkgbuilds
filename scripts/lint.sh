@@ -4,8 +4,6 @@ set -e
 # lint.sh: Runs syntax checks on all PKGBUILDs
 # Auto-repairs stale checksums when source verification fails
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
 echo "==> Linting PKGBUILDs..."
 
 # Find all directories containing PKGBUILD
@@ -42,11 +40,28 @@ for pkg in $ALL_PACKAGES; do
     if ! run_verifysource "$pkg"; then
         echo "::warning file=$pkg/PKGBUILD::Source verification failed, attempting auto-repair..."
 
-        # Auto-repair: re-download sources and recompute checksums.
-        # update-checksums.sh saves files to the PKGBUILD dir and updates
-        # the checksum arrays — no retry needed since the checksums are
-        # computed from the files it just downloaded.
-        if "$SCRIPT_DIR/update-checksums.sh" "$pkg/PKGBUILD"; then
+        # Auto-repair: use makepkg -g to regenerate checksums from the
+        # sources makepkg already downloaded. This ensures consistency —
+        # update-checksums.sh re-downloads with different curl flags and
+        # can get different content from CDN edge caches.
+        NEW_SUMS=""
+        if [ "$(id -u)" -eq 0 ] && id -u builder > /dev/null 2>&1; then
+            NEW_SUMS=$(su builder -c "cd $pkg && makepkg -g 2>/dev/null")
+        else
+            NEW_SUMS=$(cd "$pkg" && makepkg -g 2> /dev/null)
+        fi
+
+        if [ -n "$NEW_SUMS" ]; then
+            # Determine checksum type from PKGBUILD
+            if grep -q "sha512sums=" "$pkg/PKGBUILD"; then
+                algo="sha512sums"
+            else
+                algo="sha256sums"
+            fi
+            # Replace the checksum array with makepkg -g output.
+            # makepkg -g outputs the full array, e.g. sha512sums=('...' '...')
+            # Pass via env var so perl handles quoting safely.
+            NEWSUMS="$NEW_SUMS" perl -i -0777 -pe "s/\Q${algo}\E=\\(.*?\\)/\$ENV{NEWSUMS}/s" "$pkg/PKGBUILD"
             echo "::warning file=$pkg/PKGBUILD::Checksums were stale — auto-repaired"
             REPAIRED+=("$pkg/PKGBUILD")
         else
