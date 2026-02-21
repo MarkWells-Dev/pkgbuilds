@@ -43,4 +43,4 @@ squashfs-root/
 node_modules/
 
 # Wiki (separate git repo)
-wiki/
+docs/

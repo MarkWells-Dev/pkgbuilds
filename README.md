@@ -35,19 +35,12 @@ sudo pacman -S <package-name>
 ## How It Works
 
 - **PKGBUILDs** are stored in this repo
-- **CI/CD** via GitHub Actions (builds in clean Arch Linux container)
-- **Automatic Releases** created when changes are pushed to `main`
-- **GitHub Actions** builds packages on merge to main (only changed packages are rebuilt)
-- **Packages are signed** with GPG and published to GitHub Releases
+- **Versions are checked** every 30 minutes and updated automatically
+- **GitHub Actions** builds only changed packages in a clean Arch Linux container
+- **Packages are signed** with GPG and published atomically to GitHub Releases
 - **pacman** syncs directly from the release assets
 
-### CI Details
-
-- Only changed packages are rebuilt (detected via GitHub API)
-- Deleted packages are automatically removed from the repo database
-- Old package versions are cleaned up when new versions are uploaded
-- If a build fails, remaining packages continue building; successful packages are still released
-- **Force rebuild all**: Use Actions → "Run workflow" → check "Rebuild all packages"
+For CI/CD pipeline details, see the [wiki](https://github.com/MarkWells-Dev/pkgbuilds/wiki/CI-CD).
 
 ## Adding a New Package
 

@@ -2,10 +2,10 @@
 
 This guide provides instructions for building, testing, and adding packages to this repository.
 
-For detailed documentation, see the [Wiki](https://github.com/MarkWells-Dev/pkgbuilds/wiki):
+For detailed documentation, see the [wiki](https://github.com/MarkWells-Dev/pkgbuilds/wiki):
 
-- [Build Patterns](https://github.com/MarkWells-Dev/pkgbuilds/wiki/Build-Patterns) - npm, Python, AppImage, and binary packaging
-- [CI/CD Workflow](https://github.com/MarkWells-Dev/pkgbuilds/wiki/CI-CD) - Pipeline, dependency resolution, and deployment
+- [CI/CD Pipeline](https://github.com/MarkWells-Dev/pkgbuilds/wiki/CI-CD) — build pipeline, auto-repair, atomic releases
+- [Build Patterns](https://github.com/MarkWells-Dev/pkgbuilds/wiki/Build-Patterns) — npm, Python, AppImage, and binary packaging
 
 ## Development Environment
 
@@ -59,7 +59,7 @@ pkgs/
 ## Adding a New Package
 
 1. Create directory in `pkgs/` (name must match `pkgname`)
-2. Add `PKGBUILD` following appropriate [build pattern](./docs/build-patterns.md)
+2. Add `PKGBUILD` following appropriate [build pattern](https://github.com/MarkWells-Dev/pkgbuilds/wiki/Build-Patterns)
 3. Add target marker (`.local`, `.aur`, or both)
 4. Add `check.sh` smoke test (for `.local` packages)
 5. Add version check script in `scripts/packages/[pkgname].sh`

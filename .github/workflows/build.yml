@@ -24,6 +24,8 @@ jobs:
   prepare:
     runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-latest' }}
     container: archlinux:base-devel
+    permissions:
+      contents: write
     outputs:
       matrix: ${{ steps.scan.outputs.matrix }}
       matrix_heavy: ${{ steps.scan.outputs.matrix_heavy }}
@@ -38,6 +40,16 @@ jobs:
 
       - name: Lint PKGBUILDs
         run: ./scripts/lint.sh
+
+      - name: Push checksum fixes
+        if: github.event_name != 'pull_request'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if git log origin/${{ github.ref_name }}..HEAD --oneline 2>/dev/null | grep -q "auto-repair"; then
+            echo "==> Pushing auto-repaired checksums..."
+            git push origin HEAD:${{ github.ref_name }}
+          fi
 
       - name: Prepare build matrix
         id: scan
@@ -74,7 +86,7 @@ jobs:
         run: ./scripts/ci/aur-publish.sh
 
   build:
-    needs: [prepare, aur-publish]
+    needs: [prepare]
     if: ${{ always() && needs.prepare.result == 'success' && fromJson(needs.prepare.outputs.matrix)[0] != null }}
     runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-latest' }}
     container: archlinux:base-devel
@@ -104,7 +116,7 @@ jobs:
           compression-level: 0
 
   build-heavy:
-    needs: [prepare, aur-publish]
+    needs: [prepare]
     if: ${{ always() && needs.prepare.result == 'success' && fromJson(needs.prepare.outputs.matrix_heavy)[0] != null }}
     runs-on: ${{ needs.prepare.outputs.heavy_runner }}
     container: archlinux:base-devel
@@ -150,6 +162,8 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup environment
         run: ./scripts/ci/setup.sh
@@ -186,21 +200,8 @@ jobs:
           REMOVED_JSON: ${{ needs.prepare.outputs.removed }}
         run: ./scripts/ci/publish.sh
 
-      - name: Upload to Release
+      - name: Publish Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Create release if it doesn't exist
-          gh release view latest --repo ${{ github.repository }} || \
-            gh release create latest --repo ${{ github.repository }} --title "Packages" --notes "Arch Linux binary packages"
-
-          # Upload all contents of repo/ (excluding raw tarballs if we only want DBs and pkgs)
-          # We sort -u to deduplicate if any globs overlap
-          FILES_TO_UPLOAD=$(ls repo/*.pkg.tar.zst repo/*.sig repo/*.db.tar.gz repo/*.files.tar.gz repo/*.db.sig repo/*.files.sig repo/*.db repo/*.files 2>/dev/null | sort -u | tr '\n' ' ')
-
-          if [ -n "$FILES_TO_UPLOAD" ]; then
-             echo "Uploading: $FILES_TO_UPLOAD"
-             gh release upload latest $FILES_TO_UPLOAD --repo ${{ github.repository }} --clobber
-          else
-             echo "No files to upload."
-          fi
+          REMOVED_JSON: ${{ needs.prepare.outputs.removed }}
+        run: ./scripts/ci/release.sh

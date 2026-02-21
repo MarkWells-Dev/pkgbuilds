@@ -2,6 +2,9 @@
 set -e
 
 # lint.sh: Runs syntax checks on all PKGBUILDs
+# Auto-repairs stale checksums when source verification fails
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo "==> Linting PKGBUILDs..."
 
@@ -9,6 +12,21 @@ echo "==> Linting PKGBUILDs..."
 ALL_PACKAGES=$(find . -maxdepth 3 -name PKGBUILD -printf '%h\n' | sed 's|\./||' | sort)
 
 FAILURE=0
+REPAIRED=()
+
+run_verifysource() {
+    local pkg="$1"
+    if [ "$(id -u)" -eq 0 ]; then
+        if id -u builder > /dev/null 2>&1; then
+            su builder -c "cd $pkg && makepkg --verifysource -f"
+        else
+            echo "::warning::Running as root and 'builder' user not found. Skipping source verification."
+            return 0
+        fi
+    else
+        (cd "$pkg" && makepkg --verifysource -f)
+    fi
+}
 
 for pkg in $ALL_PACKAGES; do
     echo "Checking $pkg/PKGBUILD..."
@@ -21,19 +39,21 @@ for pkg in $ALL_PACKAGES; do
 
     # 2. Source verification (checksum check)
     echo "Verifying sources for $pkg..."
-    # makepkg cannot run as root. In CI, we use the builder user.
-    if [ "$(id -u)" -eq 0 ]; then
-        if id -u builder > /dev/null 2>&1; then
-            if ! su builder -c "cd $pkg && makepkg --verifysource -f"; then
-                echo "::error file=$pkg/PKGBUILD::Source verification failed"
+    if ! run_verifysource "$pkg"; then
+        echo "::warning file=$pkg/PKGBUILD::Source verification failed, attempting auto-repair..."
+
+        # Auto-repair: re-compute checksums and retry
+        if "$SCRIPT_DIR/update-checksums.sh" "$pkg/PKGBUILD"; then
+            echo "Checksums updated, retrying verification..."
+            if run_verifysource "$pkg"; then
+                echo "::warning file=$pkg/PKGBUILD::Checksums were stale — auto-repaired"
+                REPAIRED+=("$pkg/PKGBUILD")
+            else
+                echo "::error file=$pkg/PKGBUILD::Source verification failed even after checksum repair"
                 FAILURE=1
             fi
         else
-            echo "::warning::Running as root and 'builder' user not found. Skipping source verification."
-        fi
-    else
-        if ! (cd "$pkg" && makepkg --verifysource -f); then
-            echo "::error file=$pkg/PKGBUILD::Source verification failed"
+            echo "::error file=$pkg/PKGBUILD::Checksum repair failed"
             FAILURE=1
         fi
     fi
@@ -41,12 +61,23 @@ for pkg in $ALL_PACKAGES; do
     # 3. namcap check (if available)
     if command -v namcap > /dev/null; then
         if ! namcap -r PKGBUILD "$pkg/PKGBUILD" > /dev/null; then
-            # We don't fail on namcap warnings, but it's good to see them in output if we wanted
-            # For now just use it for basic validation
             :
         fi
     fi
 done
+
+# Commit repaired checksums so downstream steps use them
+if [ ${#REPAIRED[@]} -gt 0 ]; then
+    echo "==> Auto-repaired checksums for: ${REPAIRED[*]}"
+    if [ -n "$CI" ]; then
+        git config --global user.name "Updater Bot"
+        git config --global user.email "bot@noreply.github.com"
+    fi
+    git add "${REPAIRED[@]}"
+    git commit -m "fix: auto-repair stale checksums [skip ci]
+
+Affected: ${REPAIRED[*]}"
+fi
 
 if [ $FAILURE -eq 1 ]; then
     echo "Linting failed."

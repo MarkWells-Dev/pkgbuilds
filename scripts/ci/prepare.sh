@@ -32,23 +32,23 @@ echo "==> Downloading repository database..."
 
 MIGRATED=false
 # Attempt to download current DB
-if ! err=$(gh release download latest --repo "$GITHUB_REPOSITORY" --pattern "${REPO_NAME}.db.tar.gz" --dir repo 2>&1); then
+if ! err=$(gh release download --repo "$GITHUB_REPOSITORY" --pattern "${REPO_NAME}.db.tar.gz" --dir repo 2>&1); then
     # Check if failure is due to missing release or asset
-    if echo "$err" | grep -qiE "not found|no release found"; then
+    if echo "$err" | grep -qiE "not found|no release found|no assets"; then
         echo "No new database found ($err). Checking for old '${OLD_REPO_NAME}' database for migration..."
 
         # Check for old DB
-        if gh release download latest --repo "$GITHUB_REPOSITORY" --pattern "${OLD_REPO_NAME}.db.tar.gz" --dir repo 2> /dev/null; then
+        if gh release download --repo "$GITHUB_REPOSITORY" --pattern "${OLD_REPO_NAME}.db.tar.gz" --dir repo 2> /dev/null; then
             echo "Found old database. Migrating to '${REPO_NAME}'..."
             mv "repo/${OLD_REPO_NAME}.db.tar.gz" "repo/${REPO_NAME}.db.tar.gz"
             # Also try to get the old files db if it exists
-            if gh release download latest --repo "$GITHUB_REPOSITORY" --pattern "${OLD_REPO_NAME}.files.tar.gz" --dir repo 2> /dev/null; then
+            if gh release download --repo "$GITHUB_REPOSITORY" --pattern "${OLD_REPO_NAME}.files.tar.gz" --dir repo 2> /dev/null; then
                 mv "repo/${OLD_REPO_NAME}.files.tar.gz" "repo/${REPO_NAME}.files.tar.gz"
             fi
 
             # To migrate successfully, we need the actual package files for repo-add
             echo "Downloading existing packages for database migration..."
-            gh release download latest --repo "$GITHUB_REPOSITORY" --pattern '*.pkg.tar.zst' --dir repo 2> /dev/null || true
+            gh release download --repo "$GITHUB_REPOSITORY" --pattern '*.pkg.tar.zst' --dir repo 2> /dev/null || true
             MIGRATED=true
         else
             echo "No existing database found. Starting fresh."
@@ -60,12 +60,12 @@ if ! err=$(gh release download latest --repo "$GITHUB_REPOSITORY" --pattern "${R
     fi
 else
     # Also try to get the files db
-    gh release download latest --repo "$GITHUB_REPOSITORY" --pattern "${REPO_NAME}.files.tar.gz" --dir repo 2> /dev/null || true
+    gh release download --repo "$GITHUB_REPOSITORY" --pattern "${REPO_NAME}.files.tar.gz" --dir repo 2> /dev/null || true
 
     # If manual publish requested, download packages so they can be re-indexed/signed
     if [ "$MANUAL_PUBLISH" = "true" ]; then
         echo "Downloading existing packages for manual publish..."
-        gh release download latest --repo "$GITHUB_REPOSITORY" --pattern '*.pkg.tar.zst' --dir repo 2> /dev/null || true
+        gh release download --repo "$GITHUB_REPOSITORY" --pattern '*.pkg.tar.zst' --dir repo 2> /dev/null || true
     fi
 fi
 

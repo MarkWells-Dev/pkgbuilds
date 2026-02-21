@@ -67,10 +67,10 @@ EOF
 
 # Determine which remote repo to use (fallback to old name for migration)
 ACTIVE_REPO_NAME="${REPO_NAME}"
-REPO_URL="https://github.com/${GITHUB_ORG}/${GITHUB_REPO}/releases/download/latest/${REPO_NAME}.db.tar.gz"
+REPO_URL="https://github.com/${GITHUB_ORG}/${GITHUB_REPO}/releases/latest/download/${REPO_NAME}.db.tar.gz"
 
 if ! curl -sL --output /dev/null --silent --fail "$REPO_URL"; then
-    OLD_REPO_URL="https://github.com/${GITHUB_ORG}/${GITHUB_REPO}/releases/download/latest/${OLD_REPO_NAME}.db.tar.gz"
+    OLD_REPO_URL="https://github.com/${GITHUB_ORG}/${GITHUB_REPO}/releases/latest/download/${OLD_REPO_NAME}.db.tar.gz"
     if curl -sL --output /dev/null --silent --fail "$OLD_REPO_URL"; then
         echo "==> ${REPO_NAME} not found, falling back to ${OLD_REPO_NAME} for migration"
         ACTIVE_REPO_NAME="${OLD_REPO_NAME}"
@@ -85,7 +85,7 @@ if [ -n "$ACTIVE_REPO_NAME" ]; then
 
 [${ACTIVE_REPO_NAME}]
 SigLevel = Never
-Server = https://github.com/${GITHUB_ORG}/${GITHUB_REPO}/releases/download/latest
+Server = https://github.com/${GITHUB_ORG}/${GITHUB_REPO}/releases/latest/download
 EOF
 fi
 
