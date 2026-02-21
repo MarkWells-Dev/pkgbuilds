@@ -46,8 +46,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if git log origin/${{ github.ref_name }}..HEAD --oneline 2>/dev/null | grep -q "auto-repair"; then
-            echo "==> Pushing auto-repaired checksums..."
+          if git diff --name-only | grep -q PKGBUILD; then
+            echo "==> Committing auto-repaired checksums..."
+            git config user.name "Updater Bot"
+            git config user.email "bot@noreply.github.com"
+            git add pkgs/*/PKGBUILD
+            git commit -m "fix: auto-repair stale checksums [skip ci]"
             git push origin HEAD:${{ github.ref_name }}
           fi
 
